@@ -1,14 +1,19 @@
 <template>
   <div>
     <button @click.prevent="toggleModal">Добавить</button>
+    <transition name="fade-in">
+      <div v-if="showModal" @click="toggleModal" class="backdrop"></div>
+    </transition>
 
-    <transition name="fade-in-up">
-      <div v-show="showModal" :class="['modal', { 'modal_show' : showModal }]">
+    <transition name="fade-in">
+      <div v-if="showModal" :class="['modal', { 'modal_show' : showModal }]">
         <h6 class="modal__title">{{ title }}</h6>
 
-        <div class="modal__body">
-          <div v-if="labelFirstName" class="modal__row">
+        <form @submit.prevent="handleSubmit" class="modal__body">
             <formInput
+              v-if="labelFirstName"
+              ref="firstName"
+              item-class="modal__row"
               label-class="modal__label"
               input-class="modal__input"
               id="userName"
@@ -16,43 +21,50 @@
               :label="labelFirstName"
               :required="true"
             />
-          </div>
 
-          <div class="modal__row">
             <formInput
+              v-if="labelPhone"
+              ref="inputPhone"
+              item-class="modal__row"
               label-class="modal__label"
               input-class="modal__input"
               id="userPhone"
               type="number"
               pattern="[0-9]+"
-              :label="labelSecondName"
+              :label="labelPhone"
               :required="true"
             />
-          </div>
 
-          <div v-if="arrayItems" class="modal__row">
-            <label class="modal__label" for="labelThirdName">{{ labelThirdName }}
-              <!--            TODO component select-->
-              <select name="labelThirdName" :id="labelThirdName" class="modal__input">
-                <option v-for="(option, ix) in arrayItems" :key="ix" value="option.name">{{ option.name }}</option>
-              </select>
-            </label>
-          </div>
+            <formSelect
+              v-if="users.length > 0 && labelBoss"
+              ref="selectBoss"
+              item-class="modal__row"
+              label-class="modal__label"
+              input-class="modal__select"
+              id="boss"
+              :label="labelBoss"
+              :arrayItems="users"
+            />
 
           <div class="modal__row">
-            <button class="modal__button" @click.prevent="addUser">Сохранить</button>
+            <button type="submit" class="modal__button">Сохранить</button>
           </div>
-        </div>
+        </form>
       </div>
     </transition>
+
   </div>
 </template>
 
 <script>
 import formInput from './formInput.vue'
+import formSelect from './formSelect.vue'
 export default {
   name: 'modal',
-  components: {formInput},
+  components: {
+    formSelect,
+    formInput
+  },
   props: {
     title: {
       type: String,
@@ -60,17 +72,17 @@ export default {
     },
     labelFirstName: {
       type: String,
-      default: 'labelFirstName'
+      default: null
     },
-    labelSecondName: {
+    labelPhone: {
       type: String,
-      default: 'labelSecondName'
+      default: null
     },
-    labelThirdName: {
+    labelBoss: {
       type: String,
-      default: 'labelThirdName'
+      default: null
     },
-    arrayItems: {
+    users: {
       type: Array,
       default: null
     }
@@ -79,14 +91,51 @@ export default {
     showModal: false,
     userName: '',
     userPhone: '',
-    thirdName: ''
+    boss: null
   }),
   methods: {
     toggleModal () {
       this.showModal = !this.showModal
+
+      if (this.showModal) {
+        this.focusFirstElement()
+      }
     },
-    addUser () {
-      this.$emit('addUser')
+    focusFirstElement () {
+      setTimeout(() => {
+        const firstInput = this.$refs.firstName.$el.querySelector('.modal__input') || null
+
+        if (firstInput) {
+          firstInput.focus()
+        }
+      })
+    },
+    handleSubmit () {
+      const refName = this.$refs.firstName
+      const refPhone = this.$refs.inputPhone
+      const refBoss = this.$refs.selectBoss
+
+      const inputName = refName.$el.querySelector('.modal__input') || null
+      const inputPhone = refPhone.$el.querySelector('.modal__input') || null
+      // const selectBoss = refBoss.$el.querySelector('.modal__select') || null
+
+      if (inputName && inputPhone) {
+        let nameValue = inputName.value
+        let phoneValue = inputPhone.value
+        // let selectValue = selectBoss.value
+
+        const objectForm = {
+          name: nameValue,
+          phone: phoneValue,
+          // boss: selectValue
+        }
+
+        this.$emit('handleSubmit', objectForm)
+        nameValue = ''
+        phoneValue = ''
+        // selectValue = ''
+        this.showModal = false
+      }
     }
   }
 }
@@ -125,6 +174,10 @@ export default {
 .modal__row:last-child {
   text-align: center;
   margin-top: 1.25rem;
+}
+
+.modal__text {
+  flex-shrink: 0;
 }
 
 .modal__button {

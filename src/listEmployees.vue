@@ -1,25 +1,50 @@
 <template>
   <div id="app">
+    <tableEmployees
+      v-if="users.length > 0"
+      :users="users"
+    />
+
     <modalNewUser
       label-first-name="Имя"
-      label-second-name="Телефон"
-      label-third-name="Начальник"
-      @addUser="addUser"
+      label-phone="Телефон"
+      label-boss="Начальник"
+      :users="users"
+      @handleSubmit="handleSubmit"
     />
   </div>
 </template>
 
 <script>
 import modalNewUser from './components/modalNewUser.vue'
+import tableEmployees from './components/tableEmployees.vue'
 
 export default {
   name: 'listEmployees',
   components: {
-    modalNewUser
+    modalNewUser,
+    tableEmployees
+  },
+  data: () => ({
+    name: '',
+    parent: '',
+    users: JSON.parse(localStorage.getItem('users')) || [],
+    id: null
+  }),
+  mounted () {
+    this.id = this.users.length || 0
   },
   methods: {
-    addUser () {
-      console.log('add')
+    handleSubmit (data) {
+      const user = {
+        id: this.id++,
+        name: data.name,
+        phone: data.phone,
+        // boss: data.boss
+      }
+
+      this.users.push(user)
+      localStorage.setItem('users', JSON.stringify(this.users))
     }
   }
 }
@@ -34,6 +59,7 @@ body {
   letter-spacing: 0.01rem;
   word-break: break-word;
   font-size: 18px;
+  margin: 0;
 }
 
 ::selection {
@@ -41,12 +67,25 @@ body {
   color: white;
 }
 
-.fade-in-up-enter-active,
-.fade-in-up-leave-active {
-  transition: opacity .3s ease-in-out;
+html,
+body,
+#app {
+  height: 100%;
 }
-.fade-in-up-enter,
+
+.fade-in-enter-active,
+.fade-in-leave-active {
+  transition: all .2s linear;
+}
+.fade-in-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(112, 112, 112, 0.5);
+  z-index: 0;
 }
 </style>
