@@ -7,9 +7,9 @@
         :name="name"
         :class="['form-select__item', selectClass]"
         :required="required"
-        v-model="current"
+        v-model="selected"
       >
-        <option v-for="(option, ix) in arrayItems" :key="ix" value="option.name">{{ option.name }}</option>
+        <option v-for="(option, ix) in arrayItems" :key="ix" :value="option.id">{{ option.name }}</option>
       </select>
     </label>
   </fieldset>
@@ -53,7 +53,7 @@ export default {
     }
   },
   data: () => ({
-    current: null
+    selected: null
   })
 }
 </script>

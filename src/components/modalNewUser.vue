@@ -1,12 +1,15 @@
 <template>
   <div>
-    <button @click.prevent="toggleModal">Добавить</button>
+    <div class="place-center">
+      <button type="button" class="button button_outer" @click.prevent="toggleModal">Добавить</button>
+    </div>
     <transition name="fade-in">
       <div v-if="showModal" @click="toggleModal" class="backdrop"></div>
     </transition>
 
     <transition name="fade-in">
       <div v-if="showModal" :class="['modal', { 'modal_show' : showModal }]">
+        <!--TODO: times button-->
         <h6 class="modal__title">{{ title }}</h6>
 
         <form @submit.prevent="handleSubmit" class="modal__body">
@@ -40,19 +43,18 @@
               ref="selectBoss"
               item-class="modal__row"
               label-class="modal__label"
-              input-class="modal__select"
+              select-class="modal__select"
               id="boss"
               :label="labelBoss"
-              :arrayItems="users"
+              :array-items="computedArraySelect"
             />
 
           <div class="modal__row">
-            <button type="submit" class="modal__button">Сохранить</button>
+            <button type="submit" class="button">Сохранить</button>
           </div>
         </form>
       </div>
     </transition>
-
   </div>
 </template>
 
@@ -87,6 +89,11 @@ export default {
       default: null
     }
   },
+  computed: {
+    computedArraySelect () {
+      return this.users.concat(this.users.find(user => user.children.flat()).children)
+    }
+  },
   data: () => ({
     showModal: false,
     userName: '',
@@ -117,23 +124,29 @@ export default {
 
       const inputName = refName.$el.querySelector('.modal__input') || null
       const inputPhone = refPhone.$el.querySelector('.modal__input') || null
-      // const selectBoss = refBoss.$el.querySelector('.modal__select') || null
+      const selectBoss = refBoss ? refBoss.$el.querySelector('.modal__select') : null
 
       if (inputName && inputPhone) {
         let nameValue = inputName.value
         let phoneValue = inputPhone.value
-        // let selectValue = selectBoss.value
 
         const objectForm = {
           name: nameValue,
-          phone: phoneValue,
-          // boss: selectValue
+          phone: phoneValue
+        }
+
+        if (selectBoss) {
+          Object.assign(objectForm, {
+            bossID: parseInt(selectBoss.value)
+          })
         }
 
         this.$emit('handleSubmit', objectForm)
         nameValue = ''
         phoneValue = ''
-        // selectValue = ''
+        if (selectBoss) {
+          selectBoss.value = ''
+        }
         this.showModal = false
       }
     }
@@ -178,24 +191,5 @@ export default {
 
 .modal__text {
   flex-shrink: 0;
-}
-
-.modal__button {
-  font-family: 'Roboto', Arial, sans-serif;
-  font-size: .75rem;
-  color: black;
-  padding: .35rem .75rem ;
-  border: 1px solid #2589FF;
-  border-radius: 8px;
-  cursor: pointer;
-  background-color: unset;
-  transition-property: background-color, color;
-  transition-duration: .3s;
-  transition-timing-function: ease-in-out;
-}
-
-.modal__button:hover {
-  color: white;
-  background-color: #2589FF;
 }
 </style>
