@@ -32,7 +32,7 @@ export default {
     id: null
   }),
   created () {
-    this.id = 0
+    this.id = this.users.length || 0
   },
   methods: {
     addUser ({name, phone, bossID = null}) {
@@ -89,6 +89,7 @@ body {
   word-break: break-word;
   font-size: 18px;
   margin: 0;
+  min-width: 280px;
 }
 
 ::selection {
@@ -144,6 +145,6 @@ body,
 }
 
 .button_outer {
-  margin: 0.5rem;
+  margin: 2.5rem;
 }
 </style>
