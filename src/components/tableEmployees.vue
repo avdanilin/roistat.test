@@ -2,8 +2,8 @@
   <div class="table-employees">
     <div class="table-employees__head">
       <div class="table-employees__head-row">
-        <h6 class="table-employees__head-column" @click="sortBy('name')">Имя</h6>
-        <h6 class="table-employees__head-column" @click="sortBy('phone')">Телефон</h6>
+        <h6 :class="['table-employees__head-column', { 'table-employees__head-column_active' : directionName === 'name' && stateDirectionSort }]" @click="sortBy('name')">Имя</h6>
+        <h6 :class="['table-employees__head-column', { 'table-employees__head-column_active' : directionName === 'phone' && stateDirectionSort }]" @click="sortBy('phone')">Телефон</h6>
       </div>
     </div>
     <div class="table-employees__body">
@@ -29,10 +29,15 @@ export default {
   data: () => ({
     hasBossState: null,
     sortKey: '',
-    sortDirection: 1
+    directionName: '',
+    sortDirection: 1,
+    stateDirectionSort: false
   }),
   methods: {
     sortBy (key) {
+      this.directionName = key
+      this.stateDirectionSort = !this.stateDirectionSort
+
       if (this.sortKey === key) {
         this.sortDirection = this.sortDirection * -1
       } else {
@@ -64,7 +69,6 @@ export default {
   flex-wrap: wrap;
   width: calc(100% - 1rem);
   margin: 0;
-  overflow: hidden;
 }
 
 .table-employees__head {
@@ -72,12 +76,26 @@ export default {
 }
 
 .table-employees__head-column {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
   background-color: #f2f2f2;
   text-align: left;
   padding: 0.25rem;
   cursor: pointer;
   flex-basis: 50%;
   margin: 0;
+}
+
+.table-employees__head-column::after {
+  content: '☝';
+  font-size: 1rem;
+  transition: transform .3s ease-in-out;
+  transform: scale(1);
+}
+
+.table-employees__head-column_active::after {
+  transform: scale(-1);
 }
 
 .table-employees__row,
@@ -97,9 +115,5 @@ export default {
 
 .table-employees__head-column:not(:last-child) {
   border-right: 1px solid #ddd;
-}
-
-tbody tr:hover {
-  background-color: #f2f2f2;
 }
 </style>

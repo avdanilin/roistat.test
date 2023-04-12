@@ -9,50 +9,51 @@
 
     <transition name="fade-in">
       <div v-if="showModal" :class="['modal', { 'modal_show' : showModal }]">
-        <!--TODO: times button-->
         <h6 class="modal__title">{{ title }}</h6>
 
         <form @submit.prevent="handleSubmit" class="modal__body">
-            <formInput
-              v-if="labelFirstName"
-              ref="firstName"
-              item-class="modal__row"
-              label-class="modal__label"
-              input-class="modal__input"
-              id="userName"
-              type="text"
-              :label="labelFirstName"
-              :required="true"
-            />
+          <formInput
+            v-if="labelFirstName"
+            ref="firstName"
+            item-class="modal__row"
+            label-class="modal__label"
+            input-class="modal__input"
+            id="userName"
+            type="text"
+            :label="labelFirstName"
+            :required="true"
+          />
 
-            <formInput
-              v-if="labelPhone"
-              ref="inputPhone"
-              item-class="modal__row"
-              label-class="modal__label"
-              input-class="modal__input"
-              id="userPhone"
-              type="number"
-              pattern="[0-9]+"
-              :label="labelPhone"
-              :required="true"
-            />
+          <formInput
+            v-if="labelPhone"
+            ref="inputPhone"
+            item-class="modal__row"
+            label-class="modal__label"
+            input-class="modal__input"
+            id="userPhone"
+            type="number"
+            pattern="[0-9]+"
+            :label="labelPhone"
+            :required="true"
+          />
 
-            <formSelect
-              v-if="users.length > 0 && labelBoss"
-              ref="selectBoss"
-              item-class="modal__row"
-              label-class="modal__label"
-              select-class="modal__select"
-              id="boss"
-              :label="labelBoss"
-              :array-items="computedArraySelect"
-            />
+          <formSelect
+            v-if="users.length > 0 && labelBoss"
+            ref="selectBoss"
+            item-class="modal__row"
+            label-class="modal__label"
+            select-class="modal__select"
+            id="boss"
+            :label="labelBoss"
+            :array-items="computedArraySelect"
+          />
 
           <div class="modal__row">
             <button type="submit" class="button">Сохранить</button>
           </div>
         </form>
+
+        <div class="modal__close" @click="toggleModal">&times;</div>
       </div>
     </transition>
   </div>
@@ -61,6 +62,7 @@
 <script>
 import formInput from './formInput.vue'
 import formSelect from './formSelect.vue'
+
 export default {
   name: 'modal',
   components: {
@@ -91,13 +93,14 @@ export default {
   },
   computed: {
     computedArraySelect () {
-      return this.users.concat(this.users.find(user => user.children.flat()).children)
+      return this.recursiveArraySelect(this.users).concat(this.defaultSelectValue).reverse()
     }
   },
   data: () => ({
     showModal: false,
     userName: '',
     userPhone: '',
+    defaultSelectValue: [{name: 'без родителя', id: null}],
     boss: null
   }),
   methods: {
@@ -117,37 +120,55 @@ export default {
         }
       })
     },
+    recursiveArraySelect (users) {
+      let result = []
+
+      users.forEach(user => {
+        result.push(user)
+
+        if (user.children && user.children.length > 0) {
+          result = result.concat(this.recursiveArraySelect(user.children))
+        }
+      })
+
+      return result
+    },
     handleSubmit () {
-      const refName = this.$refs.firstName
-      const refPhone = this.$refs.inputPhone
-      const refBoss = this.$refs.selectBoss
+      try {
+        const refName = this.$refs.firstName
+        const refPhone = this.$refs.inputPhone
+        const refBoss = this.$refs.selectBoss
 
-      const inputName = refName.$el.querySelector('.modal__input') || null
-      const inputPhone = refPhone.$el.querySelector('.modal__input') || null
-      const selectBoss = refBoss ? refBoss.$el.querySelector('.modal__select') : null
+        const inputName = refName.$el.querySelector('.modal__input') || null
+        const inputPhone = refPhone.$el.querySelector('.modal__input') || null
+        const selectBoss = refBoss ? refBoss.$el.querySelector('.modal__select') : null
 
-      if (inputName && inputPhone) {
-        let nameValue = inputName.value
-        let phoneValue = inputPhone.value
+        if (inputName && inputPhone) {
+          let nameValue = inputName.value
+          let phoneValue = inputPhone.value
 
-        const objectForm = {
-          name: nameValue,
-          phone: phoneValue
+          const objectForm = {
+            name: nameValue,
+            phone: phoneValue
+          }
+
+          if (selectBoss) {
+            Object.assign(objectForm, {
+              bossID: parseInt(selectBoss.value)
+            })
+          }
+
+          this.$emit('handleSubmit', objectForm)
+          nameValue = ''
+          phoneValue = ''
+          if (selectBoss) {
+            selectBoss.value = ''
+          }
+
+          this.showModal = false
         }
-
-        if (selectBoss) {
-          Object.assign(objectForm, {
-            bossID: parseInt(selectBoss.value)
-          })
-        }
-
-        this.$emit('handleSubmit', objectForm)
-        nameValue = ''
-        phoneValue = ''
-        if (selectBoss) {
-          selectBoss.value = ''
-        }
-        this.showModal = false
+      } catch (error) {
+        throw new Error(error)
       }
     }
   }
@@ -169,8 +190,30 @@ export default {
   border-radius: 4px;
 }
 
-.modal__title {
+.modal__close {
+  position: absolute;
   font-size: 1rem;
+  top: .25rem;
+  right: .25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: rgba(143, 133, 143, 0.2);
+  cursor: pointer;
+  transform: rotate(0);
+  transition: transform .1s ease-in, background-color .3s ease-in-out;
+}
+
+.modal__close:hover {
+  transform: rotate(-90deg);
+  background-color: rgba(143, 133, 143, 0.5);
+}
+
+.modal__title {
+  font-size: 1.2rem;
   font-weight: 500;
   text-align: center;
   margin: 0;
@@ -181,15 +224,11 @@ export default {
 }
 
 .modal__row:not(:first-child) {
-    margin-top: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 .modal__row:last-child {
   text-align: center;
   margin-top: 1.25rem;
-}
-
-.modal__text {
-  flex-shrink: 0;
 }
 </style>
